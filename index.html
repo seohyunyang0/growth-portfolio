@@ -4,45 +4,216 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#f4de4d">
 <title>양서현 포트폴리오</title>
 <meta property="og:title" content="양서현 · 그로스 마케터 포트폴리오">
 <meta property="og:description" content="고객 행동을 분석해 구매 전환과 매출 성장을 이끄는 그로스 마케터">
 <meta property="og:image" content="https://seohyunyang0.github.io/growth-portfolio/img/01.jpg">
+<link rel="preload" as="image" href="img/01.jpg">
 <style>
-  :root { --bg: #f4f4f0; --fg: #1d1d1b; --muted: #77756e; --accent: #f5df4d; --card: #fff; }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg: #161615; --fg: #f1f0ea; --muted: #a3a197; --card: #222220; }
-  }
+  /* 슬라이드 배경과 같은 색이라, 커진 공이 그대로 페이지 바탕이 된다 */
+  :root { --yellow: #f4de4d; --paper: #f4f5f0; --ink: #1d1d1b; --muted: #77756e; }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--fg);
-    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif; }
-  header { max-width: 1280px; margin: 0 auto; padding: 28px 16px 12px;
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--paper); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
+    -webkit-font-smoothing: antialiased; }
+  body.locked { overflow: hidden; }
+
+  /* ── 인트로 ── */
+  #intro { position: fixed; inset: 0; z-index: 10; background: var(--yellow); overflow: hidden; cursor: pointer; }
+  #shadow { position: absolute; left: 0; top: 0; width: 60px; height: 12px; border-radius: 50%;
+    background: rgba(90, 70, 0, .22); filter: blur(3px); will-change: transform, opacity; }
+  #ball { position: absolute; left: 0; top: 0; width: 56px; height: 56px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff 0 40%, var(--paper) 75%);
+    box-shadow: inset -4px -6px 10px rgba(0,0,0,.06); will-change: transform; }
+  #skip { position: absolute; right: 16px; bottom: 16px; padding: 8px 14px; border: 0; border-radius: 999px;
+    background: rgba(29,29,27,.08); color: rgba(29,29,27,.6); font: inherit; font-size: 13px; cursor: pointer; }
+
+  /* 공이 커지면서 이 영역이 원형으로 열린다 */
+  #site { position: relative; z-index: 20; background: var(--paper); }
+  .intro-on #site { clip-path: circle(0px at 50% 50%); }
+
+  header { max-width: 1280px; margin: 0 auto; padding: 24px 16px 12px;
     display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   h1 { margin: 0; font-size: 20px; letter-spacing: -0.02em; }
   h1 span { color: var(--muted); font-weight: 500; }
-  .dl { display: inline-block; padding: 10px 18px; border-radius: 999px; background: var(--accent);
-    color: #1d1d1b; font-weight: 700; font-size: 14px; text-decoration: none; }
-  .dl:hover { filter: brightness(0.95); }
-  main { max-width: 1280px; margin: 0 auto; padding: 8px 16px 48px; display: grid; gap: 20px; }
-  figure { margin: 0; border-radius: 14px; overflow: hidden; background: var(--card);
-    box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.06); }
+  .dl { display: inline-block; padding: 10px 18px; border-radius: 999px; background: var(--yellow);
+    color: var(--ink); font-weight: 700; font-size: 14px; text-decoration: none; }
+  .dl:hover { filter: brightness(.95); }
+
+  main { max-width: 1280px; margin: 0 auto; padding: 8px 16px 40px; display: grid; gap: 28px; }
+  figure { margin: 0; border-radius: 14px; overflow: hidden; background: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 12px 32px rgba(0,0,0,.07); }
   figure img { display: block; width: 100%; height: auto; }
-  footer { text-align: center; color: var(--muted); font-size: 13px; padding: 0 16px 40px; }
+
+  /* 첫 장: 공이 열리면 살짝 줌아웃되며 펼쳐짐 */
+  .hero img { transform: scale(1.08); transition: transform 1.4s cubic-bezier(.2,.7,.2,1); }
+  .revealed .hero img { transform: none; }
+  header, .hint { opacity: 0; transition: opacity .8s .5s; }
+  .revealed header, .revealed .hint { opacity: 1; }
+
+  /* 나머지 장: 스크롤하면 한 장씩 떠오름 */
+  .slide { opacity: 0; transform: translateY(56px) scale(.97);
+    transition: opacity .9s ease, transform .9s cubic-bezier(.2,.7,.2,1); }
+  .slide.in { opacity: 1; transform: none; }
+
+  .hint { display: flex; justify-content: center; margin: -6px 0 4px; color: var(--muted); font-size: 13px; gap: 6px; align-items: center; }
+  .hint i { width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+    transform: rotate(45deg); animation: nudge 1.4s ease-in-out infinite; }
+  @keyframes nudge { 50% { transform: translateY(4px) rotate(45deg); } }
+
+  footer { text-align: center; color: var(--muted); font-size: 13px; padding: 0 16px 48px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .slide, .hero img { transition: none; opacity: 1; transform: none; }
+  }
 </style>
 </head>
 <body>
-<header>
-  <h1>양서현 <span>· 그로스 마케터 포트폴리오</span></h1>
-  <a class="dl" href="portfolio_yangseohyun.pdf" download="포트폴리오_양서현.pdf">PDF 다운로드</a>
-</header>
-<main>
-  <figure><img src="img/01.jpg" width="2560" height="1440" alt="자기소개 및 보유 스킬 — 고객 행동을 분석해 구매 전환과 매출 성장을 이끄는 그로스 마케터 양서현"></figure>
-  <figure><img src="img/02.jpg" width="2560" height="1440" loading="lazy" alt="01. CRM — CRM 시나리오로 기수강생을 재전환해 고단가 강의 직접전환 14건 달성"></figure>
-  <figure><img src="img/03.jpg" width="2560" height="1440" loading="lazy" alt="02. GROWTH·바이브코딩 — AI 자격증 인지 캠페인을 위해 바이브코딩으로 진단 테스트 제작"></figure>
-  <figure><img src="img/04.jpg" width="2560" height="1440" loading="lazy" alt="03. CRM — 오가닉 콘텐츠 연계 CRM으로 고단가 강의 구매 전환 6건 달성"></figure>
-  <figure><img src="img/05.jpg" width="2560" height="1440" loading="lazy" alt="04. COMMUNICATION — 인도 Client와 한국 제작팀 사이의 커뮤니케이션 가교 역할"></figure>
-  <figure><img src="img/06.jpg" width="2560" height="1440" loading="lazy" alt="05. CONTENT — 영상 콘텐츠 제작 PD와 협업한 쇼츠로 고단가 강의 조기마감"></figure>
-</main>
-<footer>010-4151-5581 · yangseohyun98@gmail.com</footer>
+<div id="intro" aria-hidden="true">
+  <div id="shadow"></div>
+  <div id="ball"></div>
+  <button id="skip" type="button">건너뛰기</button>
+</div>
+
+<div id="site">
+  <header>
+    <h1>양서현 <span>· 그로스 마케터 포트폴리오</span></h1>
+    <a class="dl" href="portfolio_yangseohyun.pdf" download="포트폴리오_양서현.pdf">PDF 다운로드</a>
+  </header>
+  <main>
+    <figure class="hero"><img src="img/01.jpg" width="2560" height="1440" alt="자기소개 및 보유 스킬 — 고객 행동을 분석해 구매 전환과 매출 성장을 이끄는 그로스 마케터 양서현"></figure>
+    <div class="hint">아래로 스크롤 <i></i></div>
+    <figure class="slide"><img src="img/02.jpg" width="2560" height="1440" loading="lazy" alt="01. CRM — CRM 시나리오로 기수강생을 재전환해 고단가 강의 직접전환 14건 달성"></figure>
+    <figure class="slide"><img src="img/03.jpg" width="2560" height="1440" loading="lazy" alt="02. GROWTH·바이브코딩 — AI 자격증 인지 캠페인을 위해 바이브코딩으로 진단 테스트 제작"></figure>
+    <figure class="slide"><img src="img/04.jpg" width="2560" height="1440" loading="lazy" alt="03. CRM — 오가닉 콘텐츠 연계 CRM으로 고단가 강의 구매 전환 6건 달성"></figure>
+    <figure class="slide"><img src="img/05.jpg" width="2560" height="1440" loading="lazy" alt="04. COMMUNICATION — 인도 Client와 한국 제작팀 사이의 커뮤니케이션 가교 역할"></figure>
+    <figure class="slide"><img src="img/06.jpg" width="2560" height="1440" loading="lazy" alt="05. CONTENT — 영상 콘텐츠 제작 PD와 협업한 쇼츠로 고단가 강의 조기마감"></figure>
+  </main>
+  <footer>010-4151-5581 · yangseohyun98@gmail.com</footer>
+</div>
+
+<script>
+(function () {
+  var doc = document.documentElement, body = document.body;
+  var intro = document.getElementById('intro'), site = document.getElementById('site');
+  var ball = document.getElementById('ball'), shadow = document.getElementById('shadow');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // 스크롤하면 한 장씩 등장
+  var slides = document.querySelectorAll('.slide');
+  if ('IntersectionObserver' in window && !reduce) {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' });
+    slides.forEach(function (s) { io.observe(s); });
+  } else {
+    slides.forEach(function (s) { s.classList.add('in'); });
+  }
+
+  function finish() {
+    intro.remove();
+    doc.classList.remove('intro-on');
+    site.style.clipPath = '';
+    body.classList.remove('locked');
+    requestAnimationFrame(function () { body.classList.add('revealed'); });
+  }
+  if (reduce) { finish(); return; }
+
+  doc.classList.add('intro-on');
+  body.classList.add('locked');
+  window.scrollTo(0, 0);
+
+  var W, H, R, floor, endX, done = false, expanding = false;
+  function measure() {
+    W = window.innerWidth; H = window.innerHeight;
+    R = W < 600 ? 22 : 28;
+    ball.style.width = ball.style.height = 2 * R + 'px';
+    floor = H * 0.62;
+    endX = W / 2;
+  }
+  measure();
+  window.addEventListener('resize', measure);
+
+  // 통통 튀는 궤적: 높이가 줄어드는 포물선 구간들
+  var hops = [0.42, 0.24, 0.12, 0.05].map(function (k) { return k * Math.min(H, 900); });
+  var g = 2600;                                 // px/s² 느낌의 중력값
+  var segs = hops.map(function (h) { return 2 * Math.sqrt(2 * h / g); });
+  var drop = Math.sqrt(2 * hops[0] / g);        // 처음엔 위에서 떨어지며 등장
+  var total = drop + segs.reduce(function (a, b) { return a + b; }, 0);
+  var settle = 0.25;                            // 바닥에 닿고 잠깐 멈춤
+
+  function heightAt(t) {
+    if (t < drop) { return hops[0] - 0.5 * g * t * t; }
+    t -= drop;
+    for (var i = 0; i < segs.length; i++) {
+      if (t < segs[i]) { var v = Math.sqrt(2 * g * hops[i]); return v * t - 0.5 * g * t * t; }
+      t -= segs[i];
+    }
+    return 0;
+  }
+
+  var t0 = null;
+  function frame(now) {
+    if (done) return;
+    if (t0 === null) t0 = now;
+    var t = (now - t0) / 1000;
+    var p = Math.min(t / total, 1);
+    var ease = 1 - Math.pow(1 - p, 2.2);
+    var x = -R * 2 + (endX + R * 2) * ease;     // 왼쪽 밖에서 가운데로
+    var y = Math.max(heightAt(Math.min(t, total)), 0);
+
+    // 바닥 근처에서 찌그러짐
+    var near = Math.max(0, 1 - y / (R * 0.9));
+    var sx = 1 + 0.22 * near, sy = 1 - 0.2 * near;
+    ball.style.transform = 'translate(' + (x - R * sx) + 'px,' + (floor - y - 2 * R * sy) + 'px) scale(' + sx + ',' + sy + ')';
+    ball.style.transformOrigin = '0 0';
+
+    var lift = Math.min(y / (hops[0] || 1), 1);
+    shadow.style.transform = 'translate(' + (x - 30) + 'px,' + (floor - 6) + 'px) scale(' + (1 - 0.5 * lift) + ')';
+    shadow.style.opacity = String(1 - 0.7 * lift);
+
+    if (t < total + settle) requestAnimationFrame(frame);
+    else expand(x, floor - R);
+  }
+
+  function expand(cx, cy) {
+    if (expanding) return;
+    expanding = true;
+    var far = Math.hypot(Math.max(cx, W - cx), Math.max(cy, H - cy));
+    var dur = 950, s0 = null;
+    shadow.style.transition = 'opacity .2s'; shadow.style.opacity = '0';
+    function step(now) {
+      if (done) return;
+      if (s0 === null) s0 = now;
+      var p = Math.min((now - s0) / dur, 1);
+      var e = p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;   // easeInOutCubic
+      var r = R + (far - R) * e;
+      site.style.clipPath = 'circle(' + r + 'px at ' + cx + 'px ' + cy + 'px)';
+      if (p > 0.35) body.classList.add('revealed');
+      if (p < 1) requestAnimationFrame(step);
+      else { done = true; finish(); }
+    }
+    // 커지기 직전 살짝 움츠렸다가
+    ball.style.transition = 'transform .18s ease-in';
+    ball.style.transform = 'translate(' + (cx - R * 1.15) + 'px,' + (cy - R * 0.85) + 'px) scale(1.15,.85)';
+    setTimeout(function () { requestAnimationFrame(step); }, 180);
+  }
+
+  function skip() {
+    if (done) return;
+    done = true;
+    finish();
+  }
+  intro.addEventListener('click', skip);
+  window.addEventListener('keydown', function (e) { if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') skip(); }, { once: true });
+
+  // 첫 장 이미지가 준비되면 시작
+  var hero = document.querySelector('.hero img');
+  function start() { requestAnimationFrame(frame); }
+  if (hero.complete) start(); else { hero.addEventListener('load', start); hero.addEventListener('error', start); setTimeout(function () { if (t0 === null) start(); }, 2500); }
+})();
+</script>
 </body>
 </html>
